@@ -2,13 +2,18 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 )
 
 type Request struct {
 	Line    RequestLine
 	Headers []HttpHeader
+	Body    string
+}
+
+type RequestMetadata struct {
+	Headers map[string]string
+	Params  []string
 	Body    string
 }
 
@@ -45,14 +50,16 @@ func parseHeaders(request string) ([]HttpHeader, error) {
 
 	rest := strings.Split(headerStart, "\r\n\r\n")
 
+	_headers := DeleteEmptyStrings(strings.Split(rest[0], "\r\n"))
+
 	headers := make([]HttpHeader, 0)
 
-	for _, h := range rest {
+	for _, h := range _headers {
 		if len(h) == 0 {
 			continue
 		}
 
-		headerParts := strings.Split(h, ": ")
+		headerParts := DeleteEmptyStrings(strings.Split(h, ": "))
 
 		if len(headerParts) != 2 {
 			return []HttpHeader{}, errors.New("invalid header")
@@ -70,8 +77,6 @@ func parseHeaders(request string) ([]HttpHeader, error) {
 func parseRequest(request string) (Request, error) {
 
 	parts := strings.Split(request, "\r\n")
-
-	fmt.Printf("Parts: %v\n", parts)
 
 	if len(parts) < 1 {
 		return Request{}, errors.New("invalid request")

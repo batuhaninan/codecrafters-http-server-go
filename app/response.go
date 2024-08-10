@@ -30,8 +30,6 @@ func (s *Server) sendResponse(conn net.Conn, response Response) {
 	sb.WriteString("\r\n")
 	sb.WriteString(response.Body)
 
-	fmt.Printf("Sending response: %q\n", sb.String())
-
 	conn.Write([]byte(
 		sb.String(),
 	),

@@ -8,20 +8,30 @@ import (
 type Route struct {
 	Path    string
 	Method  HttpMethod
-	Handler func(string, []string) string
+	Handler func(RequestMetadata) string
 }
 
 var ROUTES = make([]Route, 0)
 
-var MAIN_ROUTE = NewRoute("/", GET, func(body string, params []string) string {
+var MAIN_ROUTE = NewRoute("/", GET, func(request RequestMetadata) string {
 	return "Hello World"
 })
 
-var ECHO_ROUTE = NewRoute("/echo/{}", GET, func(body string, params []string) string {
-	return params[0]
+var ECHO_ROUTE = NewRoute("/echo/{}", GET, func(request RequestMetadata) string {
+	return request.Params[0]
 })
 
-func NewRoute(path string, method HttpMethod, handler func(string, []string) string) Route {
+var USER_AGENT_ROUTE = NewRoute("/user-agent", GET, func(request RequestMetadata) string {
+	userAgent, ok := GetHeader(request.Headers, "User-Agent")
+
+	if !ok {
+		return "No User-Agent header"
+	}
+
+	return userAgent
+})
+
+func NewRoute(path string, method HttpMethod, handler func(RequestMetadata) string) Route {
 	r := Route{
 		Path:    path,
 		Method:  method,
@@ -33,13 +43,13 @@ func NewRoute(path string, method HttpMethod, handler func(string, []string) str
 	return r
 }
 
-func GetRoute(request Request) (Route, []string, error) {
+func GetRoute(request Request) (Route, RequestMetadata, error) {
 	matchedMethodRoutes := Filter(ROUTES, func(r Route) bool {
 		return r.Method == request.Line.HttpMethod
 	})
 
 	if len(matchedMethodRoutes) == 0 {
-		return Route{}, nil, fmt.Errorf("no route found for method %s", request.Line.HttpMethod)
+		return Route{}, RequestMetadata{}, fmt.Errorf("no route found for method %s", request.Line.HttpMethod)
 	}
 
 	routeSplit := DeleteEmptyStrings(strings.Split(request.Line.Target, "/"))
@@ -47,27 +57,42 @@ func GetRoute(request Request) (Route, []string, error) {
 	for _, r := range matchedMethodRoutes {
 		matchedRouteSplit := DeleteEmptyStrings(strings.Split(r.Path, "/"))
 
-		fmt.Printf("Route Split: %+v\n", routeSplit)
-		fmt.Printf("Matched Route Split: %+v\n", matchedRouteSplit)
-
 		if len(routeSplit) != len(matchedRouteSplit) {
 			continue
 		}
 
-		params := make([]string, 0)
+		fmt.Printf("Route Split: %+v\n", routeSplit)
+		fmt.Printf("Matched Route Split: %+v\n", matchedRouteSplit)
+
+		metadata := RequestMetadata{
+			Headers: HttpHeadersToMap(request.Headers),
+			Params:  make([]string, 0),
+			Body:    request.Body,
+		}
+
+		found := false
+
+		if request.Line.Target == "/" && r.Path == "/" {
+			return r, metadata, nil
+		}
 
 		for i, s := range routeSplit {
 			if s != matchedRouteSplit[i] {
 				if matchedRouteSplit[i] == "{}" {
-					params = append(params, s)
+					metadata.Params = append(metadata.Params, s)
 				} else {
+					found = false
 					break
 				}
+			} else {
+				found = true
 			}
 		}
 
-		return r, params, nil
+		if found {
+			return r, metadata, nil
+		}
 	}
 
-	return Route{}, nil, fmt.Errorf("no route found for path %s", request.Line.Target)
+	return Route{}, RequestMetadata{}, fmt.Errorf("no route found for path %s", request.Line.Target)
 }

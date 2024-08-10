@@ -67,6 +67,26 @@ var HTTP_METHODS = []HttpMethod{
 	HEAD,
 }
 
+func GetHeader(headers map[string]string, key string) (string, bool) {
+	for k, v := range headers {
+		if strings.EqualFold(k, key) {
+			return v, true
+		}
+	}
+
+	return "", false
+}
+
+func HttpHeadersToMap(headers []HttpHeader) map[string]string {
+	m := make(map[string]string)
+
+	for _, h := range headers {
+		m[h.Key] = h.Value
+	}
+
+	return m
+}
+
 func NewHttpHeader(key string, value string) HttpHeader {
 	return HttpHeader{
 		Key:   key,

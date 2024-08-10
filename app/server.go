@@ -28,17 +28,18 @@ func (s *Server) readLoop(conn net.Conn) {
 		request, err := parseRequest(string(got))
 
 		if err != nil {
+			fmt.Printf("Error parsing request: %s\n", err.Error())
 			s.sendResponse(conn, Response{Status: BAD_REQUEST})
 			continue
 		}
 
 		fmt.Printf("Request: %+v\n", request)
 
-		if route, params, err := GetRoute(request); err == nil {
+		if route, metadata, err := GetRoute(request); err == nil {
 			response := Response{
 				Status:  OK,
 				Headers: []HttpHeader{},
-				Body:    route.Handler(request.Body, params),
+				Body:    route.Handler(metadata),
 			}
 			s.sendResponse(conn, response)
 		} else {
