@@ -14,9 +14,18 @@ var MAIN_ROUTE = NewRoute("/", GET, func(ctx RequestContext) Response {
 })
 
 var ECHO_ROUTE = NewRoute("/echo/{}", GET, func(ctx RequestContext) Response {
+
+	encoding, ok := GetHeader(ctx.Headers, "Accept-Encoding")
+
+	headers := []HttpHeader{}
+
+	if ok && Contains(VALID_ENCODINGS, encoding) {
+		headers = append(headers, NewHttpHeader("Content-Encoding", encoding))
+	}
+
 	return Response{
 		Status:  OK,
-		Headers: []HttpHeader{},
+		Headers: headers,
 		Body:    []byte(ctx.Params[0]),
 	}
 })

@@ -77,6 +77,10 @@ var HTTP_METHODS = []HttpMethod{
 	HEAD,
 }
 
+var VALID_ENCODINGS = []string{
+	"gzip",
+}
+
 func HasHeader(headers []HttpHeader, key string) bool {
 	for _, h := range headers {
 		if strings.EqualFold(h.Key, key) {
