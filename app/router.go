@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 var MAIN_ROUTE = NewRoute("/", GET, func(ctx RequestContext) Response {
@@ -19,8 +20,14 @@ var ECHO_ROUTE = NewRoute("/echo/{}", GET, func(ctx RequestContext) Response {
 
 	headers := []HttpHeader{}
 
-	if ok && Contains(VALID_ENCODINGS, encoding) {
-		headers = append(headers, NewHttpHeader("Content-Encoding", encoding))
+	encodings := DeleteEmptyStrings(strings.Split(encoding, ", "))
+
+	if ok {
+		for _, encoding := range encodings {
+			if Contains(VALID_ENCODINGS, encoding) {
+				headers = append(headers, NewHttpHeader("Content-Encoding", encoding))
+			}
+		}
 	}
 
 	return Response{
