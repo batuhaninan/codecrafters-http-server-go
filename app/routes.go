@@ -8,30 +8,12 @@ import (
 type Route struct {
 	Path    string
 	Method  HttpMethod
-	Handler func(RequestMetadata) string
+	Handler func(RequestContext) Response
 }
 
 var ROUTES = make([]Route, 0)
 
-var MAIN_ROUTE = NewRoute("/", GET, func(request RequestMetadata) string {
-	return "Hello World"
-})
-
-var ECHO_ROUTE = NewRoute("/echo/{}", GET, func(request RequestMetadata) string {
-	return request.Params[0]
-})
-
-var USER_AGENT_ROUTE = NewRoute("/user-agent", GET, func(request RequestMetadata) string {
-	userAgent, ok := GetHeader(request.Headers, "User-Agent")
-
-	if !ok {
-		return "No User-Agent header"
-	}
-
-	return userAgent
-})
-
-func NewRoute(path string, method HttpMethod, handler func(RequestMetadata) string) Route {
+func NewRoute(path string, method HttpMethod, handler func(RequestContext) Response) Route {
 	r := Route{
 		Path:    path,
 		Method:  method,
@@ -43,13 +25,13 @@ func NewRoute(path string, method HttpMethod, handler func(RequestMetadata) stri
 	return r
 }
 
-func GetRoute(request Request) (Route, RequestMetadata, error) {
+func (s *Server) GetRoute(request Request) (Route, RequestContext, error) {
 	matchedMethodRoutes := Filter(ROUTES, func(r Route) bool {
 		return r.Method == request.Line.HttpMethod
 	})
 
 	if len(matchedMethodRoutes) == 0 {
-		return Route{}, RequestMetadata{}, fmt.Errorf("no route found for method %s", request.Line.HttpMethod)
+		return Route{}, RequestContext{}, fmt.Errorf("no route found for method %s", request.Line.HttpMethod)
 	}
 
 	routeSplit := DeleteEmptyStrings(strings.Split(request.Line.Target, "/"))
@@ -61,13 +43,11 @@ func GetRoute(request Request) (Route, RequestMetadata, error) {
 			continue
 		}
 
-		fmt.Printf("Route Split: %+v\n", routeSplit)
-		fmt.Printf("Matched Route Split: %+v\n", matchedRouteSplit)
-
-		metadata := RequestMetadata{
-			Headers: HttpHeadersToMap(request.Headers),
-			Params:  make([]string, 0),
-			Body:    request.Body,
+		metadata := RequestContext{
+			Headers:    HttpHeadersToMap(request.Headers),
+			Params:     make([]string, 0),
+			Body:       request.Body,
+			ServerOpts: s.Opts,
 		}
 
 		found := false
@@ -94,5 +74,5 @@ func GetRoute(request Request) (Route, RequestMetadata, error) {
 		}
 	}
 
-	return Route{}, RequestMetadata{}, fmt.Errorf("no route found for path %s", request.Line.Target)
+	return Route{}, RequestContext{}, fmt.Errorf("no route found for path %s", request.Line.Target)
 }

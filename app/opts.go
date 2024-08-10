@@ -1,7 +1,8 @@
 package main
 
 type ServerOpts struct {
-	Port int
+	Port           int
+	ServeDirectory string
 }
 
 type HttpOpts struct {

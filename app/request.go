@@ -11,10 +11,11 @@ type Request struct {
 	Body    string
 }
 
-type RequestMetadata struct {
-	Headers map[string]string
-	Params  []string
-	Body    string
+type RequestContext struct {
+	Headers    map[string]string
+	Params     []string
+	Body       string
+	ServerOpts ServerOpts
 }
 
 func parseRequestLine(request string) (RequestLine, error) {

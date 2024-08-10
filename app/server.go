@@ -35,13 +35,8 @@ func (s *Server) readLoop(conn net.Conn) {
 
 		fmt.Printf("Request: %+v\n", request)
 
-		if route, metadata, err := GetRoute(request); err == nil {
-			response := Response{
-				Status:  OK,
-				Headers: []HttpHeader{},
-				Body:    route.Handler(metadata),
-			}
-			s.sendResponse(conn, response)
+		if route, metadata, err := s.GetRoute(request); err == nil {
+			s.sendResponse(conn, route.Handler(metadata))
 		} else {
 			s.sendResponse(conn, Response{Status: NOT_FOUND})
 		}
@@ -52,9 +47,12 @@ func (s *Server) readLoop(conn net.Conn) {
 func main() {
 	fmt.Println("Server started")
 
+	args := InitArgs()
+
 	server := Server{
 		Opts: ServerOpts{
-			4221,
+			Port:           4221,
+			ServeDirectory: args.Directory,
 		},
 		HttpOpts: HttpOpts{
 			Version: HTTP_1_1,

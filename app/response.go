@@ -9,15 +9,17 @@ import (
 type Response struct {
 	Status  HttpStatus
 	Headers []HttpHeader
-	Body    string
+	Body    []byte
 }
 
 func (s *Server) sendResponse(conn net.Conn, response Response) {
 
 	headers := response.Headers
 
+	if !HasHeader(headers, "Content-Type") {
+		headers = append(headers, NewHttpHeader("Content-Type", "text/plain"))
+	}
 	headers = append(headers, NewHttpHeader("Content-Length", fmt.Sprintf("%d", len(response.Body))))
-	headers = append(headers, NewHttpHeader("Content-Type", "text/plain"))
 
 	var sb strings.Builder
 
@@ -28,10 +30,11 @@ func (s *Server) sendResponse(conn net.Conn, response Response) {
 	}
 
 	sb.WriteString("\r\n")
-	sb.WriteString(response.Body)
+	// sb.WriteString(response.Body)
 
-	conn.Write([]byte(
-		sb.String(),
-	),
-	)
+	sbBytes := []byte(sb.String())
+
+	sbBytes = append(sbBytes, response.Body...)
+
+	conn.Write(sbBytes)
 }
