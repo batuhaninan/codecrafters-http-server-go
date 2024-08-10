@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type HttpVersion string
 type HttpMethod string
@@ -64,9 +67,16 @@ var HTTP_METHODS = []HttpMethod{
 	HEAD,
 }
 
+func NewHttpHeader(key string, value string) HttpHeader {
+	return HttpHeader{
+		Key:   key,
+		Value: value,
+	}
+}
+
 func GetHttpMethod(method string) (HttpMethod, error) {
 	for _, m := range HTTP_METHODS {
-		if string(m) == method {
+		if string(m) == strings.ToUpper(method) {
 			return m, nil
 		}
 	}
@@ -76,7 +86,7 @@ func GetHttpMethod(method string) (HttpMethod, error) {
 
 func GetHttpVersion(version string) (HttpVersion, error) {
 	for _, m := range HTTP_VERSIONS {
-		if string(m) == version {
+		if string(m) == strings.ToUpper(version) {
 			return m, nil
 		}
 	}

@@ -7,10 +7,6 @@ import (
 	"os"
 )
 
-var VALID_PATHS = []string{
-	"/",
-}
-
 type Server struct {
 	Opts     ServerOpts
 	HttpOpts HttpOpts
@@ -32,16 +28,21 @@ func (s *Server) readLoop(conn net.Conn) {
 		request, err := parseRequest(string(got))
 
 		if err != nil {
-			s.sendResponse(conn, BAD_REQUEST)
+			s.sendResponse(conn, Response{Status: BAD_REQUEST})
 			continue
 		}
 
 		fmt.Printf("Request: %+v\n", request)
 
-		if Contains(VALID_PATHS, request.Line.Target) {
-			s.sendResponse(conn, OK)
+		if route, params, err := GetRoute(request); err == nil {
+			response := Response{
+				Status:  OK,
+				Headers: []HttpHeader{},
+				Body:    route.Handler(request.Body, params),
+			}
+			s.sendResponse(conn, response)
 		} else {
-			s.sendResponse(conn, NOT_FOUND)
+			s.sendResponse(conn, Response{Status: NOT_FOUND})
 		}
 	}
 
