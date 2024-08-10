@@ -8,13 +8,13 @@ import (
 type Request struct {
 	Line    RequestLine
 	Headers []HttpHeader
-	Body    string
+	Body    []byte
 }
 
 type RequestContext struct {
 	Headers    map[string]string
 	Params     []string
-	Body       string
+	Body       []byte
 	ServerOpts ServerOpts
 }
 
@@ -44,12 +44,18 @@ func parseRequestLine(request string) (RequestLine, error) {
 	}, nil
 }
 
-func parseHeaders(request string) ([]HttpHeader, error) {
+func parseHeaders(request string) ([]HttpHeader, []byte, error) {
 	firstCRLF := strings.Index(request, "\r\n")
 
 	headerStart := request[firstCRLF+2:]
 
 	rest := strings.Split(headerStart, "\r\n\r\n")
+
+	body := make([]byte, 0)
+
+	if len(rest) > 1 {
+		body = []byte(rest[1])
+	}
 
 	_headers := DeleteEmptyStrings(strings.Split(rest[0], "\r\n"))
 
@@ -63,7 +69,7 @@ func parseHeaders(request string) ([]HttpHeader, error) {
 		headerParts := DeleteEmptyStrings(strings.Split(h, ": "))
 
 		if len(headerParts) != 2 {
-			return []HttpHeader{}, errors.New("invalid header")
+			return []HttpHeader{}, []byte{}, errors.New("invalid header")
 		}
 
 		headers = append(headers, HttpHeader{
@@ -72,7 +78,7 @@ func parseHeaders(request string) ([]HttpHeader, error) {
 		})
 	}
 
-	return headers, nil
+	return headers, body, nil
 }
 
 func parseRequest(request string) (Request, error) {
@@ -89,7 +95,7 @@ func parseRequest(request string) (Request, error) {
 		return Request{}, err
 	}
 
-	headers, err := parseHeaders(request)
+	headers, body, err := parseHeaders(request)
 
 	if err != nil {
 		return Request{}, err
@@ -98,6 +104,7 @@ func parseRequest(request string) (Request, error) {
 	req := Request{
 		Line:    reqLine,
 		Headers: headers,
+		Body:    body,
 	}
 
 	return req, nil

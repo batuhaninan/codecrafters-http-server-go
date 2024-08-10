@@ -63,3 +63,30 @@ var FILE_BY_ID_ROUTE = NewRoute("/files/{}", GET, func(ctx RequestContext) Respo
 		Body:    fileContent,
 	}
 })
+
+var FILE_CREATE_ROUTE = NewRoute("/files/{}", POST, func(ctx RequestContext) Response {
+	filename := ctx.Params[0]
+
+	if filename == "" {
+		return Response{
+			Status:  NOT_FOUND,
+			Headers: []HttpHeader{},
+		}
+	}
+
+	file, err := os.Create(filepath.Join(ctx.ServerOpts.ServeDirectory, filename))
+
+	if err != nil {
+		return Response{
+			Status:  INTERNAL_SERVER_ERROR,
+			Headers: []HttpHeader{},
+		}
+	}
+	defer file.Close()
+
+	file.Write(ctx.Body)
+
+	return Response{
+		Status: CREATED,
+	}
+})

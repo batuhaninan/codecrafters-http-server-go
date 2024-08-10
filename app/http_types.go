@@ -44,6 +44,11 @@ var INTERNAL_SERVER_ERROR = HttpStatus{
 	Reason:     "Internal Server Error",
 }
 
+var CREATED = HttpStatus{
+	StatusCode: 201,
+	Reason:     "Created",
+}
+
 var (
 	HTTP_1_1 HttpVersion = "HTTP/1.1"
 )
