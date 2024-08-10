@@ -7,12 +7,8 @@ import (
 	"os"
 )
 
-type ServerOpts struct {
-	Port int
-}
-
-type HttpOpts struct {
-	Version string
+var VALID_PATHS = []string{
+	"/",
 }
 
 type Server struct {
@@ -20,14 +16,35 @@ type Server struct {
 	HttpOpts HttpOpts
 }
 
-type HttpStatus struct {
-	StatusCode int
-	Reason     string
-}
+func (s *Server) readLoop(conn net.Conn) {
 
-var OK = HttpStatus{
-	StatusCode: 200,
-	Reason:     "OK",
+	for {
+		bytes := make([]byte, 1024)
+
+		nbytes, err := conn.Read(bytes)
+
+		if err != nil {
+			continue
+		}
+
+		got := bytes[:nbytes]
+
+		request, err := parseRequest(string(got))
+
+		if err != nil {
+			s.sendResponse(conn, BAD_REQUEST)
+			continue
+		}
+
+		fmt.Printf("Request: %+v\n", request)
+
+		if Contains(VALID_PATHS, request.Line.Target) {
+			s.sendResponse(conn, OK)
+		} else {
+			s.sendResponse(conn, NOT_FOUND)
+		}
+	}
+
 }
 
 func main() {
@@ -38,7 +55,7 @@ func main() {
 			4221,
 		},
 		HttpOpts: HttpOpts{
-			Version: "1.1",
+			Version: HTTP_1_1,
 		},
 	}
 
@@ -48,11 +65,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	conn, err := l.Accept()
-	if err != nil {
-		slog.Error("Error accepting connection:", "error", err.Error())
-		os.Exit(1)
+	for {
+		conn, err := l.Accept()
+		if err != nil {
+			slog.Error("Error accepting connection:", "error", err.Error())
+			os.Exit(1)
+		}
+
+		go server.readLoop(conn)
 	}
 
-	conn.Write([]byte(fmt.Sprintf("HTTP/%s %d %s\r\n\r\n", server.HttpOpts.Version, OK.StatusCode, OK.Reason)))
 }
