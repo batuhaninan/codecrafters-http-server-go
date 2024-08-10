@@ -44,7 +44,7 @@ func (s *Server) GetRoute(request Request) (Route, RequestContext, error) {
 		}
 
 		metadata := RequestContext{
-			Headers:    HttpHeadersToMap(request.Headers),
+			Headers:    request.Headers,
 			Params:     make([]string, 0),
 			Body:       request.Body,
 			ServerOpts: s.Opts,

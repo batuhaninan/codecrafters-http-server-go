@@ -12,7 +12,7 @@ type Request struct {
 }
 
 type RequestContext struct {
-	Headers    map[string]string
+	Headers    []HttpHeader
 	Params     []string
 	Body       []byte
 	ServerOpts ServerOpts

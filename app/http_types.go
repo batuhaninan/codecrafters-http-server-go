@@ -8,45 +8,10 @@ import (
 type HttpVersion string
 type HttpMethod string
 
-type HttpStatus struct {
-	StatusCode int
-	Reason     string
-}
-
 type RequestLine struct {
 	HttpMethod HttpMethod
 	Target     string
 	Version    HttpVersion
-}
-
-type HttpHeader struct {
-	Key   string
-	Value string
-}
-
-var OK = HttpStatus{
-	StatusCode: 200,
-	Reason:     "OK",
-}
-
-var NOT_FOUND = HttpStatus{
-	StatusCode: 404,
-	Reason:     "Not Found",
-}
-
-var BAD_REQUEST = HttpStatus{
-	StatusCode: 400,
-	Reason:     "Bad Request",
-}
-
-var INTERNAL_SERVER_ERROR = HttpStatus{
-	StatusCode: 500,
-	Reason:     "Internal Server Error",
-}
-
-var CREATED = HttpStatus{
-	StatusCode: 201,
-	Reason:     "Created",
 }
 
 var (
@@ -75,46 +40,6 @@ var HTTP_METHODS = []HttpMethod{
 	DELETE,
 	OPTIONS,
 	HEAD,
-}
-
-var VALID_ENCODINGS = []string{
-	"gzip",
-}
-
-func HasHeader(headers []HttpHeader, key string) bool {
-	for _, h := range headers {
-		if strings.EqualFold(h.Key, key) {
-			return true
-		}
-	}
-	return false
-}
-
-func GetHeader(headers map[string]string, key string) (string, bool) {
-	for k, v := range headers {
-		if strings.EqualFold(k, key) {
-			return v, true
-		}
-	}
-
-	return "", false
-}
-
-func HttpHeadersToMap(headers []HttpHeader) map[string]string {
-	m := make(map[string]string)
-
-	for _, h := range headers {
-		m[h.Key] = h.Value
-	}
-
-	return m
-}
-
-func NewHttpHeader(key string, value string) HttpHeader {
-	return HttpHeader{
-		Key:   key,
-		Value: value,
-	}
 }
 
 func GetHttpMethod(method string) (HttpMethod, error) {

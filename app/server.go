@@ -28,12 +28,9 @@ func (s *Server) readLoop(conn net.Conn) {
 		request, err := parseRequest(string(got))
 
 		if err != nil {
-			fmt.Printf("Error parsing request: %s\n", err.Error())
 			s.sendResponse(conn, Response{Status: BAD_REQUEST})
 			continue
 		}
-
-		fmt.Printf("Request: %+v\n", request)
 
 		if route, metadata, err := s.GetRoute(request); err == nil {
 			s.sendResponse(conn, route.Handler(metadata))
@@ -45,8 +42,6 @@ func (s *Server) readLoop(conn net.Conn) {
 }
 
 func main() {
-	fmt.Println("Server started")
-
 	args := InitArgs()
 
 	server := Server{

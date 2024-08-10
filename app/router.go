@@ -24,7 +24,7 @@ var ECHO_ROUTE = NewRoute("/echo/{}", GET, func(ctx RequestContext) Response {
 
 	if ok {
 		for _, encoding := range encodings {
-			if Contains(VALID_ENCODINGS, encoding) {
+			if _, ok := GetEncoder(encoding); ok {
 				headers = append(headers, NewHttpHeader("Content-Encoding", encoding))
 			}
 		}
