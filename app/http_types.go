@@ -39,6 +39,11 @@ var BAD_REQUEST = HttpStatus{
 	Reason:     "Bad Request",
 }
 
+var INTERNAL_SERVER_ERROR = HttpStatus{
+	StatusCode: 500,
+	Reason:     "Internal Server Error",
+}
+
 var (
 	HTTP_1_1 HttpVersion = "HTTP/1.1"
 )
